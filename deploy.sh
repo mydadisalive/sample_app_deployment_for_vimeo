@@ -59,20 +59,30 @@ function deploy()
 	echoAndLog "creating and archive of the current version"
 	createArchive
 	
-	# deploy app
+	# deploy app main loop, detach from ELB, clean previous installation, and deploy new app
 	echoAndLog "deploying app to deployment servers"
 	initializeInstanceIds
 	for host in "${MACHINES[@]}"; do
 		instance_id="${HOST_TO_INSTANCE_ID[$host]}"
 		
-		# clean
-		echoAndLog "cleaning $APP_HOME in $host"		
+		# detach from ELB
+		echoAndLog "detach $host with instance-id ${instance_id} from ELB"
+		aws elb deregister-instances-from-load-balancer --load-balancer-name devopstask-elb --instances $instance_id --output text | sudo tee -a $LOG_FILE
+		sleep 1
+		
+		# clean previous installation
+		echoAndLog "cleaning previous installation of $APP_HOME in $host"		
 		ssh $host "sudo rm -rf /home/app/*" | sudo tee -a $LOG_FILE 2>&1 # it's dangerous to use rm -rf $APP_HOME/* since if APP_HOME is empty we lost a server
 		
-		# deploy
+		# deploy new installation
 		echoAndLog "deploying to host $host"
 		scp -Cr "${APP_ARCHIVE_DIR}/${PROJECT_NAME}.${DATE}.${NEXT_VERSION}.tgz" "${host}:/tmp" | sudo tee -a $LOG_FILE 2>&1
 		ssh $host "(cd $APP_HOME ; sudo tar xvf /tmp/${PROJECT_NAME}.${DATE}.${NEXT_VERSION}.tgz ; rm /tmp/${PROJECT_NAME}.${DATE}.${NEXT_VERSION}.tgz)" | sudo tee -a $LOG_FILE 2>&1
+
+		# registering host back to ELB
+		echoAndLog "registering $host with instance-id $instance_id back to ELB"
+		aws elb register-instances-with-load-balancer --load-balancer-name devopstask-elb --instances $instance_id --output text | sudo tee -a $LOG_FILE
+		sleep 1
 	done
 	
 
