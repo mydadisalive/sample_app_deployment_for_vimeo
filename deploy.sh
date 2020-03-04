@@ -1,4 +1,4 @@
-# this script builds deploys the sample app
+# this script deploys the sample app
 
 trap ctrlc SIGINT # signal handler for ctrl-c
 
