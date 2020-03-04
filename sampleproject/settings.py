@@ -11,4 +11,4 @@ https://docs.djangoproject.com/en/1.11/ref/settings/
 """
 
 ##  ENVIRONMENT  ## 
-CONFIG = DEV
+CONFIG = PROD

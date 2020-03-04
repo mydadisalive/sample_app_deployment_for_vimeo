@@ -1,6 +1,6 @@
 # this script builds deploys the sample app
 
-trap ctrlc SIGINT
+trap ctrlc SIGINT # signal handler for ctrl-c
 
 set -e # exit upon any error
 #set -x # set for debug
@@ -19,8 +19,7 @@ MACHINES=(devopstask1 devopstask2)  # MACHINES contains the machines to deploy t
 declare -A HOST_TO_INSTANCE_ID      # HOST_TO_INSTANCE_ID maps host to its AWS instance-id. Initialized in main
 
 # FUNCTIONS
-
-# initizlize instance ids
+# initialize instance ids
 function initializeInstanceIds()
 {
 	echoAndLog "initializing instance ids"
@@ -119,7 +118,7 @@ function setKeyToValInFile()
 # get the version from the version file
 function getVersion()
 {
-
+	# get version
 	VERSION=`grep -o 'VERSION:.*$' ${VERSION_FILE} | cut -d: -f2`
 	echo "${VERSION}"
 }
@@ -160,7 +159,7 @@ case "${1}" in
 	-d|--deploy)
 	ENV="${2}"
 	[[ "$ENV" != "DEV" && "${ENV}" != "PROD" ]] && usage && exit 1
-	deploy "${2}"
+	deploy "${ENV}"
 	shift
 	;;
 	-h|--help)
